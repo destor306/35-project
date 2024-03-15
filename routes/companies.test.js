@@ -12,6 +12,7 @@ const {
   commonAfterAll,
   u1Token,
 } = require("./_testCommon");
+const { BadRequestError } = require("../expressError");
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -106,6 +107,61 @@ describe("GET /companies", function () {
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.statusCode).toEqual(500);
   });
+
+  test("with search filter name: ", async function(){
+    const name ='c1'
+    const resp = await request(app).get(`/companies?name=${name}`);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      companies:
+          [
+            {
+              handle: "c1",
+              name: "C1",
+              description: "Desc1",
+              numEmployees: 1,
+              logoUrl: "http://c1.img",
+            }
+          ]
+    });
+  })
+  test("with search filter min and max employees: ", async function(){
+    const min =2
+    const max =3
+    const resp = await request(app).get(`/companies?minEmployees=${min}&maxEmployees=${max}`);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      companies:
+          [
+            {
+              handle: "c2",
+              name: "C2",
+              description: "Desc2",
+              numEmployees: 2,
+              logoUrl: "http://c2.img",
+            },
+            {
+              handle: "c3",
+              name: "C3",
+              description: "Desc3",
+              numEmployees: 3,
+              logoUrl: "http://c3.img",
+            },
+          ]
+    });
+  })
+
+  test("with search filter invalid input: ", async function(){
+    const min =2
+    const max =3
+    try{
+      await request(app).get(`/companies?Employees=${min}&Employees=${max}`);
+
+    }
+    catch(error){
+      expect(error.constructor).toBe(BadRequestError);
+    };    
+  })
 });
 
 /************************************** GET /companies/:handle */

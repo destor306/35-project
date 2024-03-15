@@ -44,20 +44,48 @@ class Company {
     return company;
   }
 
-  /** Find all companies.
+  /** Find all companies with filteredData.
+   * 
+   * filtered Data
+   * - name
+   * - minEmployee
+   * - maxEmployee
    *
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
-    const companiesRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
+  static async findAll(filteredData= {}) {
+    let query = `
+    SELECT 
+    handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"
+    FROM companies`;
+    const {name, minEmployees, maxEmployees} = filteredData;
+    const whereQuery = [];
+    const queryValues = [];
+
+    if (minEmployees > maxEmployees){
+      throw new BadRequestError("minEmployee cannot be greater than maxEmployee");
+    }
+
+    if (minEmployees !==undefined){
+      queryValues.push(minEmployees);
+      whereQuery.push(`num_employees >= $${queryValues.length}`);
+    }
+
+    if (maxEmployees !==undefined){
+      queryValues.push(maxEmployees);
+      whereQuery.push(`num_employees <= $${queryValues.length}`);
+    }
+
+    if (name){
+      queryValues.push(`%${name}%`);
+      whereQuery.push(`name ILIKE $${queryValues.length}`);
+    }
+    if(whereQuery.length > 0){
+      query += " WHERE " + whereQuery.join(" AND ");
+    }
+    query += " ORDER BY name";
+    const companiesRes = await db.query(query, queryValues);
     return companiesRes.rows;
   }
 
