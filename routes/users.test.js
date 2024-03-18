@@ -12,7 +12,8 @@ const {
   commonAfterEach,
   commonAfterAll,
   u1Token,
-  adminToken
+  adminToken,
+  testJobIds
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -272,6 +273,32 @@ describe("PATCH /users/:username", () => {
     expect(isSuccessful).toBeTruthy();
   });
 });
+
+/************************************** POST /users/:username/jobs/:id */
+
+describe("POST /users/:username/jobs/:id", function(){
+  test("works for admin", async function(){
+    const username = "u1"
+    const resp = await request(app)
+    .post(`/users/${username}/jobs/${testJobIds[1]}`)
+    .set("authorization", `Bearer ${adminToken}`);
+    expect(resp.body).toEqual({applied : testJobIds[1]});
+  })
+  test("works for regular user", async function(){
+    const username = "u1"
+    const resp = await request(app)
+    .post(`/users/${username}/jobs/${testJobIds[1]}`)
+    .set("authorization", `Bearer ${u1Token}`);
+    expect(resp.body).toEqual({applied : testJobIds[1]});
+  })
+  test("incorrect userid and jobid", async function(){
+    const username = "u1123"
+    const resp = await request(app)
+    .post(`/users/${username}/jobs/123123123`)
+    .set("authorization", `Bearer ${adminToken}`);
+    expect(resp.statusCode).toBe(404);
+  })
+})
 
 /************************************** DELETE /users/:username */
 

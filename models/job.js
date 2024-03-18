@@ -24,7 +24,6 @@ class Job{
 
     if (duplicateCheck.rows[0])
       throw new BadRequestError(`Duplicate company: ${data.title}`);
-
     const result = await db.query(
           `INSERT INTO jobs
            (title, salary, equity, company_handle)
@@ -34,7 +33,7 @@ class Job{
           data.title,
           data.salary,
           data.equity,
-          data.company_handle,
+          data.companyHandle,
         ],
     );
     const job = result.rows[0];

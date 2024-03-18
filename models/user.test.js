@@ -12,7 +12,9 @@ const {
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
+  testJobIds,
 } = require("./_testCommon");
+const { DatabaseError } = require("pg");
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -228,3 +230,26 @@ describe("remove", function () {
     }
   });
 });
+
+
+/************************************** apply */
+
+
+/**
+ *  apply function test
+ * 
+ */
+describe("apply", function(){
+  test("works", async function(){
+    await User.applyjob('u1', testJobIds[0]);
+    const res = await db.query(`SELECT username, job_id FROM applications WHERE username=$1`, ['u1']);
+    expect(res.rows).toEqual([{username: 'u1', job_id: testJobIds[0]}])
+  })
+
+  test("apply non-exisiting job", async function(){
+    expect(async ()=>{
+      await User.applyjob('u1', 123412)
+    }).rejects.toThrow(DatabaseError);
+    
+  })
+})
